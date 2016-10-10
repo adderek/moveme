@@ -1,0 +1,32 @@
+#include "\masm32\include\resource.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    1,0,0,6
+PRODUCTVERSION 1,0,0,6
+//FILEFLAGSMASK  0L
+//FILEFLAGS      0L
+FILEOS         VOS__WINDOWS32 // 0x40004L //VOS_NT_WINDOWS32
+FILETYPE       VFT_APP
+//FILESUBTYPE    0L //VFT2_UNKNOWN
+{
+    BLOCK "StringFileInfo"
+    {
+		BLOCK "040904B0"
+		{
+			VALUE "FileDescription", "App that prevents screensaver from starting\000"
+			VALUE "CompanyName", "askMatt.pl Maciej Wakuła\000"
+		    VALUE "FileVersion", "1.0.0.6\000"
+		    VALUE "ProductVersion", "1.0.0.6\000"
+		    VALUE "InternalName", "moveme.exe\000"
+			VALUE "LegalCopyright", "Free to use\000"
+		    VALUE "OriginalFilename", "moveme.exe\000"
+		    VALUE "ProductName", "MoveMe\000"
+		}
+    }
+    BLOCK "VarFileInfo"
+    {
+		VALUE "Translation", 0x0409, 0x4B0 // US English, unicode
+    }
+}
+500 ICON MOVEABLE PURE LOADONCALL DISCARDABLE "moveme.ico"
+

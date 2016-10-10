@@ -1,0 +1,5 @@
+*.asm test
+*.rc text
+
+*.bat text eol=crlf
+*.ico binary
