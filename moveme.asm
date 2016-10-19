@@ -9,19 +9,25 @@ includelib \masm32\lib\user32.lib
 includelib \masm32\lib\kernel32.lib 
 includelib \masm32\lib\shell32.lib
 WM_SHELLNOTIFY equ WM_USER+5 
+WM_SHELLANIM   equ WM_USER+6
 IDI_TRAY equ 0 
+IDI_TRAY2 equ 1 
 IDM_EXIT equ 1010 
 WinMain PROTO :DWORD,:DWORD,:DWORD,:DWORD
 
 .data 
 ClassName  db "MoveMeClass",0 
-AppName	db "MoveMe",0 
-ExitString   db "E&xit Program",0
+AppName	   db "MoveMe",0 
+ExitString db "E&xit Program",0
+
+myico1 dd 0
+myico2 dd 0
 
 .data? 
 hInstance dd ? 
 note NOTIFYICONDATA <> 
 hPopupMenu dd ?
+threadHandle dd ?
 
 INPUT_MOUSE    equ 0
 MOUSEEVENTF_MOVE equ 1
@@ -104,15 +110,21 @@ WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
 		mov note.uFlags,NIF_ICON+NIF_MESSAGE 
 		mov note.uCallbackMessage,WM_SHELLNOTIFY 
 		;invoke LoadIcon,NULL,IDI_WINLOGO 
-		invoke LoadIcon,hInstance,500 
+		invoke LoadIcon,hInstance,500
+		mov myico1,eax
 		mov note.hIcon,eax 
+		mov note.dwState, NIS_SHAREDICON
+		mov note.dwStateMask, NIS_SHAREDICON
+		invoke LoadIcon,hInstance,501
+		mov myico2,eax
 		invoke lstrcpy,addr note.szTip,addr AppName 
 		invoke ShowWindow,hWnd,SW_HIDE 
 		invoke Shell_NotifyIcon,NIM_ADD,addr note 
 		mov  ebx,OFFSET ThreadProc
-		invoke CreateThread,NULL,NULL,ebx,ADDR hWnd,0,NULL 
+		invoke CreateThread,NULL,NULL,ebx,hWnd,0,ADDR threadHandle
 	.elseif uMsg==WM_DESTROY 
-		invoke DestroyMenu,hPopupMenu 
+		invoke DestroyMenu,hPopupMenu
+		invoke CloseHandle, threadHandle
 		invoke PostQuitMessage,NULL 
 	.elseif uMsg==WM_COMMAND 
 		.if lParam==0 
@@ -120,6 +132,16 @@ WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
 			mov eax,wParam 
 			invoke DestroyWindow,hWnd 
 		.endif
+	.elseif uMsg==WM_SHELLANIM
+		;push lParam
+		;pop eax
+		;mov eax,wParam
+		;add eax,500
+		;invoke LoadIcon,hInstance,eax
+		mov eax,lParam
+		mov note.hIcon, eax
+		mov note.uFlags, NIF_ICON 
+		invoke Shell_NotifyIcon,NIM_MODIFY,addr note 
 	.elseif uMsg==WM_SHELLNOTIFY 
 		.if wParam==IDI_TRAY 
 			.if lParam==WM_RBUTTONDOWN 
@@ -128,7 +150,7 @@ WndProc proc hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
 				invoke TrackPopupMenu,hPopupMenu,TPM_RIGHTALIGN,pt.x,pt.y,NULL,hWnd,NULL 
 				invoke PostMessage,hWnd,WM_NULL,0,0 
 			.elseif lParam==WM_LBUTTONDBLCLK 
-				invoke PostQuitMessage,NULL 
+				invoke PostQuitMessage,NULL
 			.endif 
 		.endif 
 	.else 
@@ -142,7 +164,7 @@ WndProc endp
 ThreadProc PROC hWnd:DWORD
 	LOCAL pt:POINT 
 	Loop1:
-	invoke Sleep, 30*1000
+	invoke Sleep, 14500
 	mov ti._type,INPUT_MOUSE
 	mov ti.mi.dwFlags,MOUSEEVENTF_MOVE
 	mov ti.mi._dx,1
@@ -155,6 +177,9 @@ ThreadProc PROC hWnd:DWORD
 	sub ti.mi._dx,2
 	sub ti.mi._dy,2
 	invoke SendInput,1,addr ti, SIZEOF INPUT
+	invoke SendMessage, hWnd, WM_SHELLANIM, 1, myico2
+	invoke Sleep, 500
+	invoke SendMessage, hWnd, WM_SHELLANIM, 0, myico1
 	jmp Loop1
 ThreadProc ENDP
 
